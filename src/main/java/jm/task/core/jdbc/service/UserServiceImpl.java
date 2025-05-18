@@ -5,62 +5,52 @@ import jm.task.core.jdbc.dao.UserDaoHibernateImpl;
 import jm.task.core.jdbc.dao.UserDaoJDBCImpl;
 import jm.task.core.jdbc.model.User;
 
+import java.io.InputStream;
 import java.util.List;
+import java.util.Properties;
 
 public class UserServiceImpl implements UserService {
 
-    private final UserDao userDaoJDBC = new UserDaoJDBCImpl();
-    private final UserDao userDaoHibernate = new UserDaoHibernateImpl();
+   private final static Properties propOfCon = new Properties();
+   static {
+       try (InputStream input = UserServiceImpl.class.getClassLoader()
+               .getResourceAsStream("controller.properties")) {
+                propOfCon.load(input);
+       } catch (Exception e) {
+       }
+   }
 
-    private final boolean useHibernate = false;
-
+   public static UserDao getUserDao () {
+       String type = propOfCon.getProperty("dao.impl");
+       if (type.equals("jdbc")) {
+           return new UserDaoJDBCImpl();
+       }
+       else {
+           return new UserDaoHibernateImpl();
+       }
+   }
 
     public void createUsersTable() {
-        if (useHibernate) {
-            userDaoHibernate.createUsersTable();
-        } else {
-            userDaoJDBC.createUsersTable();
-        }
+       getUserDao().createUsersTable();
     }
 
     public void dropUsersTable() {
-        if (useHibernate) {
-            userDaoHibernate.dropUsersTable();
-        } else {
-            userDaoJDBC.dropUsersTable();
-        }
+        getUserDao().dropUsersTable();
     }
 
     public void saveUser(String name, String lastName, byte age) {
-        if (useHibernate) {
-            userDaoHibernate.saveUser(name, lastName, age);
-        } else {
-            userDaoJDBC.createUsersTable();
-        }
+       getUserDao().saveUser(name, lastName, age);
     }
 
     public void removeUserById(long id) {
-        if (useHibernate) {
-            userDaoHibernate.removeUserById(id);
-        } else {
-            userDaoJDBC.removeUserById(id);
-        }
+       getUserDao().removeUserById(id);
     }
 
     public List<User> getAllUsers() {
-        if (useHibernate) {
-            return userDaoHibernate.getAllUsers();
-        } else {
-            return userDaoJDBC.getAllUsers();
-        }
+        return getUserDao().getAllUsers();
     }
 
-
     public void cleanUsersTable() {
-        if (useHibernate) {
-            userDaoHibernate.cleanUsersTable();
-        } else {
-            userDaoJDBC.cleanUsersTable();
-        }
+       getUserDao().cleanUsersTable();
     }
 }

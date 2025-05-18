@@ -1,81 +1,66 @@
 package jm.task.core.jdbc.dao;
-
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-
+import org.jboss.logging.Logger;
 import java.util.List;
+import java.util.function.Consumer;
+import static jm.task.core.jdbc.dao.SQLDetails.*;
 
 public class UserDaoHibernateImpl implements UserDao {
+    private static final Logger logger = Logger.getLogger(UserDaoHibernateImpl.class);
     public UserDaoHibernateImpl() {
 
     }
 
-
     @Override
     public void createUsersTable() {
-        Transaction tsa = null;
-        try(Session ss = Util.getSessionFactory().openSession();)
-        {tsa = ss.beginTransaction();
-            ss.createSQLQuery("CREATE TABLE IF NOT EXISTS users (" +
-                    "id SERIAL PRIMARY KEY, " +
-                    "name VARCHAR(50), " +
-                    "lastName VARCHAR(50), " +
-                    "age SMALLINT)").executeUpdate();
-            tsa.commit();
-        } catch (Exception e) {
-            if (tsa != null) tsa.rollback();
-            e.printStackTrace();
-        }
-
+        templFor(new Consumer<Session>() {
+            @Override
+            public void accept(Session session) {
+                session.createNativeQuery(CREATE_TABLE).executeUpdate();
+            }
+        });
     }
 
     @Override
     public void dropUsersTable() {
-        try (Session ss = Util.getSessionFactory().openSession();) {
-            Transaction tsa = ss.beginTransaction();
-            ss.createSQLQuery("DROP TABLE IF EXISTS users").executeUpdate();
-            tsa.commit();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        templFor(new Consumer<Session>() {
+            @Override
+            public void accept(Session session) {
+                session.createNativeQuery(DROP_TABLE).executeUpdate();
+            }
+        });
     }
 
     @Override
     public void saveUser(String name, String lastName, byte age) {
-        try (Session ss = Util.getSessionFactory().openSession();) {
-            Transaction tsa = ss.beginTransaction();
-            User user = new User();
-            user.setName(name);
-            user.setLastName(lastName);
-            user.setAge(age);
-            ss.save(user);
-            tsa.commit();
-            System.out.println("User с именем – " + name + " добавлен в базу данных");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        templFor(new Consumer<Session>() {
+            @Override
+            public void accept(Session session) {
+                User user = new User();
+                user.setName(name);
+                user.setLastName(lastName);
+                user.setAge(age);
+                session.save(user);
+                logger.info("User с именем – " + name + " добавлен в базу данных");
+            }
+        });
     }
 
     @Override
     public void removeUserById(long id) {
-        Transaction tsa = null;
-        try (Session ss = Util.getSessionFactory().openSession();) {
-            tsa = ss.beginTransaction();
-            User user = ss.get(User.class, id);
-            if (user != null) {
-                ss.delete(user);
-                tsa.commit();
+        templFor(new Consumer<Session>() {
+            @Override
+            public void accept(Session session) {
+                User user = session.get(User.class, id);
+                if(user != null) {
+                    session.delete(user);
+                }
             }
+        });
         }
-        catch (Exception e) {
-            if (tsa != null) tsa.rollback();
-            e.printStackTrace();
-        }
-    }
 
     @Override
     public List<User> getAllUsers() {
@@ -84,22 +69,30 @@ public class UserDaoHibernateImpl implements UserDao {
             return ss.createQuery("from User", User.class).list();
         }
         catch (Exception e) {
-            e.printStackTrace();
+            logger.warn("Users didn't get");
             return null;
         }
-
     }
 
     @Override
     public void cleanUsersTable() {
-        Transaction tsa = null;
-        try (Session ss = Util.getSessionFactory().openSession();) {
-            tsa = ss.beginTransaction();
-            ss.createQuery("DELETE from User").executeUpdate();
-            tsa.commit();
+     templFor(new Consumer<Session>() {
+         @Override
+         public void accept(Session session) {
+             session.createNativeQuery(CLEAR_TABLE).executeUpdate();
+         }
+     });
+    }
+
+    private void templFor(Consumer<Session> ss) {
+        Transaction trs = null;
+        try (Session se = Util.getSessionFactory().openSession();) {
+            trs = se.beginTransaction();
+            ss.accept(se);
+            trs.commit();
         } catch (Exception e) {
-            if (tsa != null) tsa.rollback();
-            e.printStackTrace();
+            if (trs != null) trs.rollback();
+            logger.warn("Transaction didn't open");
         }
     }
 }
