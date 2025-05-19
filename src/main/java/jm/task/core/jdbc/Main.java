@@ -1,7 +1,7 @@
 package jm.task.core.jdbc;
 
 
-import jm.task.core.jdbc.dao.DAOController;
+import jm.task.core.jdbc.dao.DAOInjector;
 import jm.task.core.jdbc.service.UserService;
 import jm.task.core.jdbc.service.UserServiceImpl;
 
@@ -20,17 +20,6 @@ public class Main {
     }
 
     private static UserService injectUserService() {
-        return new UserServiceImpl(DAOController.getUserDao());
+        return new UserServiceImpl(DAOInjector.getUserDao());
     }
-
-//        UserService service = new UserServiceImpl();
-//        service.createUsersTable();
-//        service.saveUser("Danil", "Chernov", (byte) 26);
-//        service.saveUser("Matvey", "Perestoronin", (byte) 21);
-//        service.saveUser("Leonid", "Malinov", (byte) 19);
-//        service.saveUser("Anfisa", "Suzdaltseva", (byte) 27);
-//        service.getAllUsers();
-//        service.cleanUsersTable();
-//        service.dropUsersTable();
-
 }

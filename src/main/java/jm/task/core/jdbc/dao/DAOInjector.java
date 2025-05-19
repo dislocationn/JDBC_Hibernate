@@ -4,12 +4,12 @@ import org.jboss.logging.Logger;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class DAOController {
-    private static final Logger logger = Logger.getLogger(DAOController.class);
+public class DAOInjector {
+    private static final Logger logger = Logger.getLogger(DAOInjector.class);
     private static final Properties props = new Properties();
 
     static {
-        try (InputStream input = DAOController.class.getClassLoader().getResourceAsStream("controller.properties")) {
+        try (InputStream input = DAOInjector.class.getClassLoader().getResourceAsStream("controller.properties")) {
             props.load(input);
         } catch (Exception e) {
             logger.warn("Could not load controller.properties", e);
