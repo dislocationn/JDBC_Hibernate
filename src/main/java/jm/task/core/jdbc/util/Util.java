@@ -4,6 +4,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.sql.*;
 import java.util.Properties;
 
@@ -11,6 +12,7 @@ public class Util {
 
     private final static Properties jProp = loadJProp();
     private static SessionFactory sessionFactory;
+    private static final String ERROR_LOAD_PROP = "Error loading properties file";
 
     static {
         try {
@@ -42,7 +44,8 @@ public class Util {
             prop.load(input);
             return prop;
         } catch (IOException e) {
-            throw new RuntimeException("Oshibka pri zagruzke", e);
+            throw new UncheckedIOException(ERROR_LOAD_PROP, e);
+
         }
     }
 
@@ -53,7 +56,7 @@ public class Util {
             prop.load(input);
             return prop;
         } catch (IOException e) {
-            throw new RuntimeException("Oshibka pri zagruzke", e);
+            throw new UncheckedIOException(ERROR_LOAD_PROP, e);
         }
     }
 }
